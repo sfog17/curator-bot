@@ -1,2 +1,8 @@
+# Dev
+.vscode
 .pytest_cache
 __pycache__/
+*.egg-info/
+
+# Data
+*.jpg
