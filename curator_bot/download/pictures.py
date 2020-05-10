@@ -4,7 +4,7 @@ import math
 import re
 import shutil
 import time
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 import requests
 
@@ -79,27 +79,26 @@ def find_paintings_page(wiki_painter: str) -> List[str]:
 
         paths = re.findall(regex_path, page_request.text)
         for painting_path in paths:
-            logger.info(painting_path)
             paintings_url_pages.append(painting_path)
 
     return paintings_url_pages
 
 
-def download_images(list_url: List[str], out_dir_path: Path):
+def download_images(list_url: List[str], out_dir_path: Path, artist: Optional[str] = None):
     """ Download pictures from a list of URL """
     for url_path in list_url:
         # Extract Artist/Painting Name fron URL
         regex = r'https://uploads\d.wikiart.org/images/(.*?)/(.*?).jpg'
         regextract = re.search(regex, url_path)
-        artist_name = regextract.group(1)
+        artist_name = artist if artist else regextract.group(1)
         painting = regextract.group(2)
 
         # Create directory (with artist name) if not exist
-        dit_artist_path = out_dir_path / artist_name
-        dit_artist_path.mkdir(exist_ok=True)
+        dir_artist_path = out_dir_path / artist_name
+        dir_artist_path.mkdir(exist_ok=True)
 
         # Download artist paintings (if not already present)
-        out_path = dit_artist_path / (painting + '.jpg')
+        out_path = dir_artist_path / (painting + '.jpg')
         if not out_path.exists():
             logger.info(f'Download {url_path} to {out_path}')
             response = requests.get(url_path, stream=True)
@@ -123,4 +122,4 @@ def download_artist_pictures(artist: str, parent_dir: Path):
     wiki_name = find_artist_wikiname(artist_name=artist)
     url_pages = find_paintings_page(wiki_painter=wiki_name)
     logger.info(url_pages)
-    download_images(url_pages, parent_dir)
+    download_images(url_pages, parent_dir, artist=wiki_name)

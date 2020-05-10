@@ -12,5 +12,6 @@ def build_dataset():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, filename='curator-bot.log')
+    logging.getLogger().addHandler(logging.StreamHandler())
     build_dataset()
