@@ -100,7 +100,7 @@ def download_images(list_url: List[str], out_dir_path: Path):
 
         # Download artist paintings (if not already present)
         out_path = dit_artist_path / (painting + '.jpg')
-        if not out_path.exists:
+        if not out_path.exists():
             logger.info(f'Download {url_path} to {out_path}')
             response = requests.get(url_path, stream=True)
             with open(out_path, 'wb') as out_file:
