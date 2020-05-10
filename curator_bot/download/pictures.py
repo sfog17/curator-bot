@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # Constants
 NB_IMAGES_PAGE_1 = 20
 NB_IMAGES_PAGE = 60
-BASE_URL = 'https://www.wikiart.org/en/'
+BASE_URL = 'https://www.wikiart.org/en'
 
 
 class DownloadArtistException(Exception):
@@ -27,7 +27,7 @@ def find_artist_wikiname(artist_name: str) -> Tuple[str, str]:
 
     logger.info(f'Search matches for {artist_name}')
     first_letter = artist_name[0].lower()
-    url = BASE_URL + f'Alphabet/{first_letter}/text-list'
+    url = BASE_URL + f'/Alphabet/{first_letter}/text-list'
     req = requests.get(url)
     regex_artist = r'<a href="/en/(.*?)">(.*?)</a>'
     list_artists = re.findall(regex_artist, req.text)
@@ -76,7 +76,7 @@ def find_paintings_page(url_artist_name: str) -> List[str]:
     regex_path = r'https://uploads\d.wikiart.org/images/[\w\-/]+.jpg'
 
     for page_num in range(nb_pages):
-        logger.info(f'------- Page {page_num + 1} --------')
+        logger.debug(f'------- Page {page_num + 1} --------')
 
         url_request = f'{BASE_URL}/{url_artist_name}/mode/all-paintings'
         url_request += f'?json=2&layout=new&page={page_num + 1}&resultType=masonry'
@@ -86,12 +86,20 @@ def find_paintings_page(url_artist_name: str) -> List[str]:
         for painting_path in paths:
             paintings_url_pages.append(painting_path)
 
+        time.sleep(0.1)
+
     return paintings_url_pages
 
 
-def download_images(list_url: List[str], out_dir_path: Path, artist: Optional[str] = None):
+def download_images(
+    list_url: List[str],
+    out_dir_path: Path,
+    artist: Optional[str] = None,
+    limit: Optional[int] = None
+):
     """ Download pictures from a list of URL """
-    for url_path in list_url:
+    urls = list_url[:limit] if limit else list_url
+    for url_path in urls:
         # Extract Artist/Painting Name fron URL
         regex = r'https://uploads\d.wikiart.org/images/(.*?)/(.*?).jpg'
         regextract = re.search(regex, url_path)
@@ -110,12 +118,12 @@ def download_images(list_url: List[str], out_dir_path: Path, artist: Optional[st
             with open(out_path, 'wb') as out_file:
                 shutil.copyfileobj(response.raw, out_file)
             del response
-            time.sleep(0.5)
+            time.sleep(0.1)
         else:
             logger.info(f'File already exists - {out_path} ')
 
 
-def download_artist_pictures(artist: str, parent_dir: Path):
+def download_artist_pictures(artist: str, parent_dir: Path, limit: int = 1000):
     """
     Download all pictures of an artist from WikiArt and create a subfolder
     with those pictures
@@ -127,4 +135,4 @@ def download_artist_pictures(artist: str, parent_dir: Path):
     url_artist_name, artist_wiki_name = find_artist_wikiname(artist_name=artist)
     url_pages = find_paintings_page(url_artist_name=url_artist_name)
     logger.info(url_pages)
-    download_images(url_pages, parent_dir, artist=artist_wiki_name)
+    download_images(url_pages, parent_dir, artist=artist_wiki_name, limit=limit)
