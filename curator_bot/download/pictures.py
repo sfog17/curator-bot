@@ -1,10 +1,11 @@
 """ Download all the paintings of a given artists from www.wikiart.org """
+import html
 import logging
 import math
 import re
 import shutil
 import time
-from typing import List, Optional
+from typing import List, Tuple, Optional
 from pathlib import Path
 import requests
 
@@ -20,7 +21,8 @@ class DownloadArtistException(Exception):
     pass
 
 
-def find_artist_wikiname(artist_name: str) -> str:
+def find_artist_wikiname(artist_name: str) -> Tuple[str, str]:
+    """ Look for an artist name and returns (url_artist_name, artist_wiki_name)"""
     potential_matches = []
 
     logger.info(f'Search matches for {artist_name}')
@@ -40,7 +42,10 @@ def find_artist_wikiname(artist_name: str) -> str:
     elif len(potential_matches) == 1:
         logger.info(f'{artist_name} - Found 1 match: {potential_matches[0]}')
 
-    return potential_matches[0][0]
+    url_artist_name = html.unescape(potential_matches[0][0])
+    artist_wiki_name = html.unescape(potential_matches[0][1])
+
+    return (url_artist_name, artist_wiki_name)
 
 
 def extract_nb_paintngs(response_text: str):
@@ -52,7 +57,7 @@ def extract_nb_paintngs(response_text: str):
     return nb_paintings
 
 
-def find_paintings_page(wiki_painter: str) -> List[str]:
+def find_paintings_page(url_artist_name: str) -> List[str]:
     """ Given a wikiart artist URL page, return URL for all its paintings """
 
     # Initialise
@@ -60,7 +65,7 @@ def find_paintings_page(wiki_painter: str) -> List[str]:
 
     # Create session and connect
     session = requests.Session()
-    response = session.get(f'{BASE_URL}/{wiki_painter}/all-works/text-list')
+    response = session.get(f'{BASE_URL}/{url_artist_name}/all-works/text-list')
 
     nb_paintings = extract_nb_paintngs(response.text)
 
@@ -73,7 +78,7 @@ def find_paintings_page(wiki_painter: str) -> List[str]:
     for page_num in range(nb_pages):
         logger.info(f'------- Page {page_num + 1} --------')
 
-        url_request = f'{BASE_URL}/{wiki_painter}/mode/all-paintings'
+        url_request = f'{BASE_URL}/{url_artist_name}/mode/all-paintings'
         url_request += f'?json=2&layout=new&page={page_num + 1}&resultType=masonry'
         page_request = session.get(url_request)
 
@@ -119,7 +124,7 @@ def download_artist_pictures(artist: str, parent_dir: Path):
         artist: Artist name
         parent_dir: Parent folder where to create the subfolder
     """
-    wiki_name = find_artist_wikiname(artist_name=artist)
-    url_pages = find_paintings_page(wiki_painter=wiki_name)
+    url_artist_name, artist_wiki_name = find_artist_wikiname(artist_name=artist)
+    url_pages = find_paintings_page(url_artist_name=url_artist_name)
     logger.info(url_pages)
-    download_images(url_pages, parent_dir, artist=wiki_name)
+    download_images(url_pages, parent_dir, artist=artist_wiki_name)

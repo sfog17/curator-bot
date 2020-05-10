@@ -4,8 +4,8 @@ from curator_bot.download.pictures import find_artist_wikiname, DownloadArtistEx
 
 
 def test_find_artist():
-    artist = find_artist_wikiname('Zurbaran')
-    assert artist == 'francisco-de-zurbaran'
+    artist = find_artist_wikiname('Sorolla')
+    assert artist == ('joaqu-n-sorolla', 'Joaquín Sorolla')
 
 
 def test_find_artist_mistake():
