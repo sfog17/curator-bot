@@ -2,6 +2,7 @@
 import html
 import logging
 import math
+import random
 import re
 import shutil
 import time
@@ -45,13 +46,13 @@ def find_artist_wikiname(artist_name: str) -> Tuple[str, str]:
     url_artist_name = html.unescape(potential_matches[0][0])
     artist_wiki_name = html.unescape(potential_matches[0][1])
 
-    return (url_artist_name, artist_wiki_name)
+    return url_artist_name, artist_wiki_name
 
 
 def extract_nb_paintngs(response_text: str):
     """ Regex to extract the number of paintings for an artist"""
     # Extract number of paintings, calculate number of pages to scrape
-    logger.debug(re.findall(r'<title>(.*?)<\/title>', response_text))
+    logger.debug(re.findall(r'<title>(.*?)</title>', response_text))
     regex_title = r'<title>.* - (\d+?) .* - painting<\/title>'
     nb_paintings = int(re.search(regex_title, response_text).group(1))
     return nb_paintings
@@ -98,7 +99,13 @@ def download_images(
     limit: Optional[int] = None
 ):
     """ Download pictures from a list of URL """
-    urls = list_url[:limit] if limit else list_url
+    # Select N random images if limit is specified
+    if limit:
+        random.shuffle(list_url)
+        urls = list_url[:100]
+    else:
+        urls = list_url
+
     for url_path in urls:
         # Extract Artist/Painting Name fron URL
         regex = r'https://uploads\d.wikiart.org/images/(.*?)/(.*?).jpg'
@@ -131,6 +138,7 @@ def download_artist_pictures(artist: str, parent_dir: Path, limit: int = 1000):
     Args:
         artist: Artist name
         parent_dir: Parent folder where to create the subfolder
+        limit: Max images to download
     """
     url_artist_name, artist_wiki_name = find_artist_wikiname(artist_name=artist)
     url_pages = find_paintings_page(url_artist_name=url_artist_name)
