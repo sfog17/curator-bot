@@ -71,7 +71,7 @@ def find_paintings_page(url_artist_name: str) -> List[str]:
     nb_paintings = extract_nb_paintngs(response.text)
 
     nb_pages = math.ceil(1 + ((nb_paintings - NB_IMAGES_PAGE_1) / NB_IMAGES_PAGE))
-    logger.info(f'Retrieving {nb_paintings} paintings')
+    logger.info(f'Found {nb_paintings} paintings')
 
     # For each page, extract the images url
     regex_path = r'https://uploads\d.wikiart.org/images/[\w\-/]+.jpg'
@@ -105,6 +105,7 @@ def download_images(
         urls = list_url[:100]
     else:
         urls = list_url
+    logger.info(f'Downloading {len(urls)} paintings')
 
     for url_path in urls:
         # Extract Artist/Painting Name fron URL
