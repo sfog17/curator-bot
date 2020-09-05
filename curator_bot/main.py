@@ -13,6 +13,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, filename='curator-bot.log')
     logging.getLogger().addHandler(logging.StreamHandler())
     build_dataset(
-        list_artists=['Zurbaran', 'Sorolla'],
+        list_artists=[
+            'El Greco', 'Velazquez', 'Murillo', 'Ribera', 'Zurbaran', 'Goya',
+            'Sorolla', 'Picasso', 'Dali', 'Miro'
+        ],
         parent_dir=Path(__file__).resolve().parent.parent / 'data' / 'raw'
     )

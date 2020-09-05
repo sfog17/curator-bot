@@ -102,7 +102,7 @@ def download_images(
     # Select N random images if limit is specified
     if limit:
         random.shuffle(list_url)
-        urls = list_url[:100]
+        urls = list_url[:limit]
     else:
         urls = list_url
     logger.info(f'Downloading {len(urls)} paintings')
